@@ -3,14 +3,11 @@ import os
 
 import boto3
 
-
 # 環境変数からパラメータを取得
 from_mail_address = os.getenv('FROM_MAIL_ADDRESS')
 
-# --------------------
 # DynamoDBから口コミ情報を取得
-# --------------------
-def fetch_review_from_dynsmodb(review_id):
+def fetch_review_from_dynamodb(review_id):
     # DynamoDBのクライアントを作成
     dynamodb = boto3.resource('dynamodb')
     
@@ -25,10 +22,8 @@ def fetch_review_from_dynsmodb(review_id):
     
     return review_user_name, review_mail_address, review_sentiment
 
-# --------------------
-# 感情に合わせたメッセージを取得
-# --------------------
-def get_sentiment_text(review_sentiment, review_user_name):
+# 感情に合わせてメッセージを設定
+def get_text_for_sentiment(review_sentiment, review_user_name):
     if review_sentiment == "POSITIVE":
         text = f"頂いたご意見をスタッフ一同励みとして、今後も{review_user_name}様に安心してご利用いただけるよう努めてまいります。"
     elif review_sentiment == "NEGATIVE":
@@ -38,12 +33,10 @@ def get_sentiment_text(review_sentiment, review_user_name):
     
     return text
 
-# --------------------
 # body用のテキストを取得
-# --------------------
 def get_body_text(review_sentiment, review_user_name):
     # 感情に合わせたメッセージを取得
-    sentiment_text = get_sentiment_text(review_sentiment, review_user_name)
+    sentiment_text = get_text_for_sentiment(review_sentiment, review_user_name)
     
     body_text = f"""
 {review_user_name} 様
@@ -57,9 +50,7 @@ def get_body_text(review_sentiment, review_user_name):
     
     return body_text
 
-# --------------------
 # メール送信
-# --------------------
 def send_email_using_ses(sentiment, user_name, mail_address):
     # SESクライアントの設定
     ses_client = boto3.client('ses', region_name='ap-northeast-1')
@@ -102,7 +93,7 @@ def lambda_handler(event, context):
     review_id = event['id']
     
     # DynamoDBから氏名とメールアドレス
-    review_user_name, review_mail_address, review_sentiment = fetch_review_from_dynsmodb(review_id)
+    review_user_name, review_mail_address, review_sentiment = fetch_review_from_dynamodb(review_id)
 
     # メール送信
     send_email_using_ses(review_sentiment, review_user_name, review_mail_address)

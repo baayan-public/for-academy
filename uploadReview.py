@@ -5,12 +5,10 @@ import os
 
 import boto3
 
-# 環境変数
+# 環境変数(Lambdaで設定)
 bucket_name = os.getenv('S3_BUCKET_NAME', 'デフォルトのバケット名')
 
-# --------------------
 # 画像ファイルをアップロードする
-# --------------------
 def upload_image_file(review_id, event):
 
     # base64形式の画像データを復号しバイトコードに
@@ -25,10 +23,8 @@ def upload_image_file(review_id, event):
     
     return file_name
     
-# --------------------
 # DynamoDBへのデータ保存
-# --------------------
-def insertDynamoDB(review_id, review_text, user_name, mail_address, image_path):
+def insert_dynamodb(review_id, review_text, user_name, mail_address, image_path):
     # DynamoDBクライアントの初期化
     dynamodb = boto3.client('dynamodb')
     
@@ -46,9 +42,7 @@ def insertDynamoDB(review_id, review_text, user_name, mail_address, image_path):
     # DynamoDBにデータを保存
     dynamodb.put_item(TableName=table_name, Item=insert_item)
     
-# --------------------
 # Main関数
-# --------------------
 def lambda_handler(event, context):
     
     # レビューIDを取得
@@ -61,7 +55,7 @@ def lambda_handler(event, context):
         image_path = None
 
     # DynamoDBに保存
-    insertDynamoDB(
+    insert_dynamodb(
         review_id, 
         event["reviewText"], 
         event["userName"], 
